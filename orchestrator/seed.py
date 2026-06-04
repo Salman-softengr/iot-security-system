@@ -8,61 +8,96 @@ from db.models import Device, FlowEvent, Alert, AuditLog
 def seed_data():
     db = SessionLocal()
     try:
-        # 1. Clear existing data (optional, but good for a clean seed)
+        # 1. Clear existing data
         db.query(FlowEvent).delete()
         db.query(Alert).delete()
         db.query(AuditLog).delete()
         db.query(Device).delete()
         
-        # 2. Add Diverse IoT Devices
-        devices = [
-            Device(device_id="dev_4d5e", mac_address="00:1A:2B:3C:4D:5E", ip_address="192.168.1.10", hostname="LivingRoom-SmartPlug", vlan_tag=1, risk_score=0.12),
-            Device(device_id="dev_4d5f", mac_address="00:1A:2B:3C:4D:5F", ip_address="192.168.1.11", hostname="FrontDoor-IPCamera", vlan_tag=1, risk_score=0.45),
-            Device(device_id="dev_eeff", mac_address="AA:BB:CC:DD:EE:FF", ip_address="192.168.1.50", hostname="Industrial-Sensor-01", vlan_tag=1, risk_score=0.05),
-            Device(device_id="dev_bc12", mac_address="12:34:56:78:90:AB", ip_address="192.168.1.102", hostname="Office-SmartLock", vlan_tag=1, risk_score=0.88),
-            Device(device_id="dev_ef34", mac_address="FE:DC:BA:98:76:54", ip_address="192.168.1.105", hostname="HVAC-Controller", vlan_tag=999, risk_score=0.92),
-            Device(device_id="dev_a1b2", mac_address="A1:B2:C3:D4:E5:F6", ip_address="192.168.1.110", hostname="Smart-Thermostat", vlan_tag=1, risk_score=0.15),
+        # 2. Add 20+ Diverse IoT Devices
+        device_templates = [
+            ("SmartPlug", "TP-Link", "192.168.1."),
+            ("IPCamera", "Hikvision", "192.168.1."),
+            ("Industrial-Sensor", "Siemens", "10.0.0."),
+            ("SmartLock", "August", "192.168.1."),
+            ("HVAC-Controller", "Honeywell", "10.0.0."),
+            ("Smart-Thermostat", "Nest", "192.168.1."),
+            ("Medical-Monitor", "GE-Health", "10.5.0."),
+            ("Voice-Assistant", "Amazon", "192.168.1."),
+            ("Smart-Bulb", "Philips", "192.168.1."),
+            ("EV-Charger", "Tesla", "10.0.0."),
         ]
+
+        devices = []
+        for i in range(25):
+            name, vendor, subnet = random.choice(device_templates)
+            mac = f"{random.randint(0,255):02X}:{random.randint(0,255):02X}:{random.randint(0,255):02X}:{random.randint(0,255):02X}:{random.randint(0,255):02X}:{random.randint(0,255):02X}"
+            ip = f"{subnet}{100 + i}"
+            dev_id = f"dev_{mac.replace(':', '')[-6:].lower()}"
+            
+            # Mix of healthy and suspicious devices
+            risk = random.uniform(0, 0.4)
+            if i % 7 == 0: risk = random.uniform(0.6, 0.95)
+            
+            devices.append(Device(
+                device_id=dev_id,
+                mac_address=mac,
+                ip_address=ip,
+                hostname=f"{vendor}-{name}-{i+1}",
+                vlan_tag=999 if risk > 0.9 else 1,
+                risk_score=risk
+            ))
+        
         db.add_all(devices)
         db.commit()
 
-        # 3. Add Historical Flow Events (last 24 hours)
+        # 3. Add 500+ Historical Flow Events
         now = datetime.utcnow()
         for device in devices:
-            for i in range(24): # 24 hourly data points
-                timestamp = now - timedelta(hours=i)
-                # Normal behavior with some variance
-                base_score = device.risk_score
-                score = max(0, min(1, base_score + random.uniform(-0.1, 0.1)))
+            # Generate a "baseline" for each device
+            for i in range(48): # 48 data points (every 30 mins for 24h)
+                timestamp = now - timedelta(minutes=30 * i)
                 
+                # Introduce occasional spikes
+                is_spike = random.random() < 0.05
+                multiplier = 10 if is_spike else 1
+                
+                score = device.risk_score
+                if is_spike: score = min(1.0, score + 0.3)
+
                 event = FlowEvent(
                     time=timestamp,
                     device_id=device.device_id,
-                    flow_duration_ms=random.randint(5000, 15000),
-                    bytes_out=random.randint(1000, 100000),
-                    packets_in=random.randint(50, 500),
+                    flow_duration_ms=random.randint(2000, 5000) * multiplier,
+                    bytes_out=random.randint(500, 5000) * multiplier,
+                    packets_in=random.randint(10, 100) * multiplier,
                     anomaly_score=score,
                     is_anomaly=(score > 0.7)
                 )
                 db.add(event)
         
-        # 4. Add some Alerts
-        alerts = [
-            Alert(device_id="dev_bc12", severity="HIGH", message="Unusual outbound traffic detected from Office-SmartLock", timestamp=now - timedelta(minutes=45)),
-            Alert(device_id="dev_ef34", severity="CRITICAL", message="Unauthorized access attempt blocked for HVAC-Controller", timestamp=now - timedelta(hours=2)),
-            Alert(device_id="dev_4d5f", severity="MEDIUM", message="Firmware update signature mismatch for FrontDoor-IPCamera", timestamp=now - timedelta(hours=5)),
+        # 4. Add dynamic Alerts
+        alert_msgs = [
+            "Port scanning behavior detected",
+            "Brute force attempt on SSH service",
+            "Unauthorized outbound connection to known malicious C2",
+            "DNS tunneling signature identified",
+            "Anomalous flow volume detected in quiet period",
+            "Multiple failed authentication attempts from internal source"
         ]
-        db.add_all(alerts)
-
-        # 5. Add Audit Logs
-        logs = [
-            AuditLog(actor="SYSTEM", action="AUTO_QUARANTINE", target="dev_ef34", details="High risk score (0.92) triggered isolation", status="SUCCESS", timestamp=now - timedelta(hours=2)),
-            AuditLog(actor="admin", action="MANUAL_SCAN", target="dev_4d5f", details="Scheduled security audit", status="SUCCESS", timestamp=now - timedelta(hours=6)),
-        ]
-        db.add_all(logs)
+        
+        high_risk_devs = [d for d in devices if d.risk_score > 0.6]
+        for dev in high_risk_devs:
+            for _ in range(random.randint(1, 3)):
+                db.add(Alert(
+                    device_id=dev.device_id,
+                    severity="CRITICAL" if dev.risk_score > 0.85 else "HIGH",
+                    message=random.choice(alert_msgs),
+                    timestamp=now - timedelta(minutes=random.randint(10, 600))
+                ))
 
         db.commit()
-        print("Database successfully seeded with dummy data.")
+        print(f"Database successfully seeded with 25 devices and {25*48} events.")
     except Exception as e:
         db.rollback()
         print(f"Error seeding database: {e}")
