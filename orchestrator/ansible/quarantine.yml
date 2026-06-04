@@ -1,0 +1,12 @@
+---
+- name: Quarantine Compromised IoT Device
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Set VLAN for target MAC
+      debug:
+        msg: "SSH to switch and set interface for {{ target_mac }} to VLAN 999"
+
+    - name: Apply ACL rule
+      debug:
+        msg: "Applying block ACL for {{ target_mac }}"

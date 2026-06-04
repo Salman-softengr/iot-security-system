@@ -1,0 +1,29 @@
+# Environments
+.env
+.venv
+env/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+build/
+
+# Docker
+.docker_data/
+postgres_data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project Specific
+inference/model/saved/*
+/tmp/switch_state.json

@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  dashboard:
+    environment:
+      - VITE_API_URL=/api # Use relative path for Codespaces proxying
+  
+  orchestrator:
+    environment:
+      - LOG_LEVEL=DEBUG

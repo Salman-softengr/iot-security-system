@@ -1,0 +1,33 @@
+{
+  "name": "IoT Security System",
+  "dockerComposeFile": [
+    "../docker-compose.yml"
+  ],
+  "service": "orchestrator",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [3000, 8000, 9092, 5432],
+  "portsAttributes": {
+    "3000": {
+      "label": "Security Dashboard",
+      "onAutoForward": "notify"
+    },
+    "8000": {
+      "label": "Orchestrator API",
+      "onAutoForward": "silent"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  }
+}

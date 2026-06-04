@@ -1,0 +1,8 @@
+---
+- name: Release IoT Device from Quarantine
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Reset VLAN for target MAC
+      debug:
+        msg: "SSH to switch and set interface for {{ target_mac }} back to VLAN 1"
