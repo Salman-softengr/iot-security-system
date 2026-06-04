@@ -1,7 +1,8 @@
 import React from 'react';
 import * as Lucide from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const MetricCard = ({ title, value, icon, color = "blue", subtitle, trend }) => {
+const MetricCard = ({ title, value, icon, color = "blue", subtitle, trend, to }) => {
   const Icon = Lucide[icon];
   
   const colors = {
@@ -13,25 +14,33 @@ const MetricCard = ({ title, value, icon, color = "blue", subtitle, trend }) => 
     cyan: "text-cyan-600 bg-cyan-50 border-cyan-100",
   };
 
-  return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+  const content = (
+    <div className={`bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm transition-all h-full
+      ${to ? 'hover:shadow-lg hover:border-blue-200 cursor-pointer active:scale-[0.98]' : ''}
+    `}>
       <div className="flex justify-between items-start mb-4">
-        <div className={`p-3 rounded-xl border ${colors[color]}`}>
+        <div className={`p-3 rounded-2xl border ${colors[color]}`}>
           {Icon && <Icon size={24} />}
         </div>
-        {trend && (
-          <span className={`text-xs font-bold px-2 py-1 rounded-lg ${trend > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+        {trend !== undefined && (
+          <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${trend > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
             {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
           </span>
         )}
       </div>
-      <h3 className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-1">{title}</h3>
+      <h3 className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">{title}</h3>
       <div className="flex items-baseline gap-2">
-        <p className="text-3xl font-black text-slate-900 tracking-tight">{value}</p>
-        {subtitle && <span className="text-xs text-slate-400 font-medium">{subtitle}</span>}
+        <p className="text-3xl font-black text-slate-900 tracking-tighter">{value}</p>
+        {subtitle && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{subtitle}</span>}
       </div>
     </div>
   );
+
+  if (to) {
+    return <Link to={to} className="block">{content}</Link>;
+  }
+
+  return content;
 };
 
 export default MetricCard;
