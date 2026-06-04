@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, BigINT, JSON, ForeignKey, Text
+from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, BigInteger, JSON, ForeignKey, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
@@ -20,7 +20,7 @@ class FlowEvent(Base):
     time = Column(DateTime(timezone=True), primary_key=True)
     device_id = Column(String, ForeignKey("device_registry.device_id"))
     flow_duration_ms = Column(Float)
-    bytes_out = Column(BigINT)
+    bytes_out = Column(BigInteger)
     packets_in = Column(Integer)
     anomaly_score = Column(Float)
     is_anomaly = Column(Boolean)
